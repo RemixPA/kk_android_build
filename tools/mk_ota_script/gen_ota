@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# Copyright (C) 2013 The MoKee OpenSource Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+if [ -z "$1" ];then
+    echo "please input an argument for ota"
+    exit 1
+fi
+
+MK_BUILDTYPE=NIGHTLY
+DEVICE=$1
+TARGET_PKG_PATH=`cat out/target/product/$DEVICE/romPath`
+if [ -z "$OUT_DIR" ];then
+	OTA_INPUT=out/target/OTA_INPUT/$DEVICE
+else
+	OTA_INPUT=$OUT_DIR/target/OTA_INPUT/$DEVICE
+fi
+
+mkdir -p $OTA_INPUT
+
+
+if [ -z "`which xdelta3 2> /dev/null`" ];then
+        echo "xdelta3 is not installed!"
+        echo "Please install it first!"
+        exit 1
+elif [ -z "$OTA_INPUT" ];then
+	echo "OTA_INPUT not defined!"
+	exit 1
+else
+	INPUT=$OTA_INPUT
+fi
+
+if [ -z "$OUT_DIR" ];then
+	OUTPUT=out/target/OTA/$DEVICE
+	LOGDIR=out/target/OTA/$DEVICE/logs
+else
+	OUTPUT=$OUT_DIR/target/OTA/$DEVICE
+	LOGDIR=$OUT_DIR/target/OTA/$DEVICE/logs
+fi
+
+cp $TARGET_PKG_PATH $INPUT 2> /dev/null
+
+echo ""
+echo "OTA: RemixPA"
+build/tools/mk_ota_script/ota $INPUT $OUTPUT $LOGDIR
+
+if [ ! -z "$MK_OTA_EXTRA" ];then
+	mkdir -p $MK_OTA_EXTRA/$MK_BUILDTYPE/$MK_BUILD
+	cp $OUTPUT/* $MK_OTA_EXTRA/$MK_BUILDTYPE/$MK_BUILD 2> /dev/null
+fi

@@ -1322,6 +1322,7 @@ function godir () {
     \cd $T/$pathname
 }
 
+<<<<<<< HEAD
 # Credit for color strip sed: http://goo.gl/BoIcm
 function dopush()
 {
@@ -1396,6 +1397,16 @@ function dopush()
 alias mmp='dopush mm'
 alias mmmp='dopush mmm'
 alias mkap='dopush mka'
+
+# OTA Script
+function ota() {
+    ./build/tools/mk_ota_script/gen_ota $1
+}
+
+# Batch OTA Script
+function ota_all() {
+    ./build/tools/mk_ota_script/gen_ota_all $1 $2
+}
 
 # Force JAVA_HOME to point to java 1.6 if it isn't already set
 function set_java_home() {
