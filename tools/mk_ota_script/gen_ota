@@ -22,7 +22,8 @@ fi
 
 MK_BUILDTYPE=NIGHTLY
 DEVICE=$1
-TARGET_PKG_PATH=`cat out/target/product/$DEVICE/romPath`
+# TARGET_PKG_PATH=`cat out/target/product/$DEVICE/romPath`
+TARGET_PKG_PATH=pa_$DEVICE-*
 if [ -z "$OUT_DIR" ];then
 	OTA_INPUT=out/target/OTA_INPUT/$DEVICE
 else
