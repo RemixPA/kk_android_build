@@ -1322,7 +1322,6 @@ function godir () {
     \cd $T/$pathname
 }
 
-<<<<<<< HEAD
 # Credit for color strip sed: http://goo.gl/BoIcm
 function dopush()
 {
