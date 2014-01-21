@@ -15,9 +15,10 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - jgrep:   Greps on all local Java files.
 - resgrep: Greps on all local res/*.xml files.
 - godir:   Go to the directory containing a file.
-- mka:      Builds using SCHED_BATCH on all processors.
-- mkap:     Builds the module(s) using mka and pushes them to the device.
+- mka:     Builds using SCHED_BATCH on all processors.
+- mkap:    Builds the module(s) using mka and pushes them to the device.
 - pushboot:Push a file from your OUT dir to your phone and reboots it, using absolute path.
+- getlog:  Generate changelog.
 
 Look at the source to view more functions. The complete list is:
 EOF
@@ -1396,6 +1397,11 @@ function dopush()
 alias mmp='dopush mm'
 alias mmmp='dopush mmm'
 alias mkap='dopush mka'
+
+# Changelog Tool
+function getlog() {
+    ./build/clog $1
+}
 
 # OTA Script
 function ota() {
