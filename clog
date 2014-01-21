@@ -5,12 +5,13 @@ tdate=`date +"%m/%d/%Y"`
 cdate=`date +"%y%m%d"`
 rdir=`pwd`
 logdir=`pwd`/changelog
-if [ -d "$logdir" ]; then
+if [ ! -d "$logdir" ]; then
 mkdir $logdir
 fi
-logfile=Changelog_$cdate.log
+logfile=Changelog.log
+logpath="$logdir"/"$logfile"
 
-rm -f "$logdir"/"$logfile"
+rm -f "$logpath"
 
 # Check the date start range is set
 if [ -z "$sdate" ]; then
@@ -31,10 +32,11 @@ fi
 # Find the directories to log
 echo "RemixPA Changelog Generating -------------------"
 echo ""
+cd $rdir
 # Log starter
-echo "RemixPA Changelog from $sdate" - "$tdate" >> "$logdir"/"$logfile"
-echo "---------------------------------------------------------------" >> "$logdir"/"$logfile"
-echo "" >> "$logdir"/"$logfile"
+echo "RemixPA Changelog from $sdate" - "$tdate" >> "$logpath"
+echo "---------------------------------------------------------------" >> "$logpath"
+echo "" >> "$logpath"
 find -name .git | sed 's/\/.git//g' | sed 'N;$!P;$!D;$d' | while read line
 do
 cd $line
@@ -43,21 +45,34 @@ cd $line
     # Forgive my bad script :P
     project=${line#*/}
     if [ ! -z "$log" ]; then
+        if [ ! "$project" == ".repo/manifests" ];then
         # Write the changelog
         echo " >>> Changelog is updated and written for $project ..."
-        echo "Project: $project" >> "$logdir"/"$logfile"
+        echo "Project: $project" >> "$logpath"
         echo "$log" | while read line
         do
-        echo " $line" >> "$logdir"/"$logfile"
+        echo " $line" >> "$logpath"
         done
-        echo "" >> "$logdir"/"$logfile"
+        echo "" >> "$logpath"
+        fi
     fi
-cd $ANDROID_BUILD_TOP
+cd $rdir
 done
-count=`grep -c "" "$logdir"/"$logfile"`
+count=`grep -c "" "$logpath"`
 if [ "$count" == "3" ]; then
-    echo "No changes, maybe we delayed commit." >> "$logdir"/"$logfile"
-    echo "" >> "$logdir"/"$logfile"
+    echo "No changes, maybe we delayed commit." >> "$logpath"
+    echo "" >> "$logpath"
 fi
-echo "---------------------------------------------------------------" >> "$logdir"/"$logfile"
-echo "You can see more changelog from http://github.com/RemixPA" >> "$logdir"/"$logfile"
+echo "---------------------------------------------------------------" >> "$logpath"
+echo "You can see more changelog from http://github.com/RemixPA" >> "$logpath"
+echo ""
+echo "---------------------------------------------------------------"
+echo ""
+echo "Ready to upload?[y]/[n]"
+read answer
+if [ "$answer" == "y" ];then
+    cd $logdir
+    git add .
+    git commit -am "Changelog: $sdate to $tdate"
+    pushme
+fi
