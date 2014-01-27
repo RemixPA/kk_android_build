@@ -20,10 +20,13 @@ if [ -z "$1" ];then
     exit 1
 fi
 
-MK_BUILDTYPE=NIGHTLY
+if [ ! -e "mk" ];then
+    echo "please run me on android top directory!"
+    exit 1
+fi
+
 DEVICE=$1
-# TARGET_PKG_PATH=`cat out/target/product/$DEVICE/romPath`
-TARGET_PKG_PATH=pa_$DEVICE-*
+
 if [ -z "$OUT_DIR" ];then
 	OTA_INPUT=out/target/OTA_INPUT/$DEVICE
 else
@@ -32,6 +35,8 @@ fi
 
 mkdir -p $OTA_INPUT
 
+# TARGET_PKG_PATH=`cat out/target/product/$DEVICE/romPath`
+TARGET_PKG_PATH=out/target/product/$DEVICE/pa_$DEVICE-4*.zip
 
 if [ -z "`which xdelta3 2> /dev/null`" ];then
         echo "xdelta3 is not installed!"
@@ -58,7 +63,3 @@ echo ""
 echo "OTA: RemixPA"
 build/tools/mk_ota_script/ota $INPUT $OUTPUT $LOGDIR
 
-if [ ! -z "$MK_OTA_EXTRA" ];then
-	mkdir -p $MK_OTA_EXTRA/$MK_BUILDTYPE/$MK_BUILD
-	cp $OUTPUT/* $MK_OTA_EXTRA/$MK_BUILDTYPE/$MK_BUILD 2> /dev/null
-fi
