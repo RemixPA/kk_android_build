@@ -17,7 +17,6 @@
 
 INPUT_PATH=$1
 OUTPUT_PATH=$2
-LOG_PATH=$3
 
 get_timestamp(){
 echo $1 | cut -d'-' -f4 | cut -d'.' -f1
@@ -67,15 +66,12 @@ for i in $FILENAMES;do
 done
 
 get_latest
-LOG_DATE=`date '+%y%m%d%H%M'`
-mkdir -p $LOG_PATH
 if [ ! -z "$LATEST_ZIP" ];then
 	echo "Latest zip is $LATEST_ZIP"
-	echo "Latest zip is $LATEST_ZIP" >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
-	echo "Generating OTA packages..." >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
-	echo "====================================" >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
+	echo "Generating OTA packages..."
+	echo "===================================="
 else
-	echo "Error! Check file names or input parameters!" >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
+	echo "Error! Check file names or input parameters!"
 	exit 1
 fi
 
@@ -84,16 +80,17 @@ for i in $FILENAMES;do
 	CUR_TIMESTAMP=`get_timestamp $i`
 	if [ "$i" != "$LATEST_ZIP" ] && [ ! -d $INPUT_PATH/$i ] && [[ "$i" == *".zip" ]];then
 		echo "Generating OTA package for $i..."
-		echo "------------------------------------" >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
-		echo "Generating OTA package for $i..." >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
-		build/tools/mk_ota_script/otaxdelta3 $INPUT_PATH/$i $INPUT_PATH/$LATEST_ZIP $OUTPUT_PATH/OTA-$LATEST_VERSION-$LATEST_DEVICE-$CUR_TIMESTAMP-$LATEST_TIMESTAMP.zip >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
-		echo "Completed OTA package for $i at `date`" >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
-		echo "------------------------------------" >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
+		echo "------------------------------------"
+		echo "Generating OTA package for $i..."
+		build/tools/mk_ota_script/otabsdiff $INPUT_PATH/$i $INPUT_PATH/$LATEST_ZIP $OUTPUT_PATH/OTA-$LATEST_VERSION-$LATEST_DEVICE-$CUR_TIMESTAMP-$LATEST_TIMESTAMP.zip
+		echo "Completed OTA package for $i at `date`"
+		MD5=`md5sum $OUTPUT_PATH/OTA-$LATEST_VERSION-$LATEST_DEVICE-$CUR_TIMESTAMP-$LATEST_TIMESTAMP.zip | cut -f1 -d' '`
+		echo "MD5sum : $MD5"
+		echo "------------------------------------"
 	else
-	    echo "OTA package not build"
+	    echo "Skip package $i"
 	    echo "------------------------------------"
 	fi
 done
-echo "====================================" >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log
+echo "===================================="
 echo "Completed at `date`"
-echo "Completed at `date`" >> $LOG_PATH/ota_${LATEST_DEVICE}_$LOG_DATE.log

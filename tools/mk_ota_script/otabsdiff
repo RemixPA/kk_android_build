@@ -2,34 +2,54 @@
 #
 # Copyright (C) 2013 The MoKee OpenSource Project
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-if [ ! -d "$ANDROID_BUILD_TOP" ] && [ ! -d "vendor/pa" ];then
-    echo "android top dir is not found!"
-    echo "please confirm you're on top dir of the source"
-    exit 1   
-fi
 
 if [ -z "$OUT_DIR" ];then
-	TMP=out/target/OTA/tmp
+	TMP=out/target/OTA/tmp/$RANDOM
 else
-	TMP=$OUT_DIR/target/OTA/tmp
+	TMP=$OUT_DIR/target/OTA/tmp/$RANDOM
 fi
 
-if [ -z "$XDELTA3" ];then
-	XDELTA3=xdelta3
+if [ -z "$BSDIFF" ];then
+	BSDIFF=bsdiff
 fi
+
+gen_diff(){
+if [ -f $EQUIV ];then
+	oldsha1=`sha1sum $1 | cut -d' ' -f1`
+	newsha1=`sha1sum ../z2/$1 | cut -d' ' -f1`
+	file=`dirname $1 | cut -d'.' -f2`/`basename $1`
+	newsize=`du $EQUIV | head -n 1 | cut -f1`
+	if [ "$newsha1" == "$oldsha1" ]; then
+		echo "skipping: $1"
+	else
+		echo "bsdiff: $1"
+		mkdirp ../out/patch/$(dirname $1) 2> /dev/null
+		$BSDIFF $1 $EQUIV ${OUTFILE}.p
+		filename=`basename $1`
+		if ! echo $EXCLUDE_CHECK_MAIN | grep -q $filename;then
+			if ! echo $EXCLUDE_CHECK_DEVICE | grep -q $filename;then
+				if ! echo $EXCLUDE_CHECK_COMMON | grep -q $filename;then
+					echo "apply_patch_check(\"$file\", \"$newsha1\", \"$oldsha1\") || abort(\"$file has unexpected contents.\");" >> ../checkpatch.txt
+				fi
+			fi
+		fi
+		echo "apply_patch(\"$file\", \"-\", $newsha1, $newsize, $oldsha1, package_extract_file(\"patch${file}.p\"));" >> ../applypatch.txt
+	fi
+fi
+}
 
 IS_MTD=0
 SECURITYDIR=$ANDROID_BUILD_TOP/build/target/product/security
@@ -101,7 +121,7 @@ if [ -f z2/system/bin/loadpreinstalls.sh ]; then
 
 	mkdirp out/$PRELOAD_HASH_DIR 2> /dev/null
 	for file in `ls out/$PRELOAD_APP_DIR`; do
-		[ -f out/$PRELOAD_APP_DIR/$file ] && md5sum out/$PRELOAD_APP_DIR/$file | cut -d" " -f1 > out/$PRELOAD_HASH_DIR/${file}.md5
+		[ -f out/$PRELOAD_APP_DIR/$file ] && md5sum out/$PRELOAD_APP_DIR/$file | cut -d' ' -f1 > out/$PRELOAD_HASH_DIR/${file}.md5
 	done
 fi
 
@@ -194,29 +214,17 @@ if ls z2/*mtd* &> /dev/null;then
 	done
 fi
 
-# Create delta
+# Create patch
 cd z1
 for f in $(find .);do
 	EQUIV=../z2/$f
 	OUTFILE=../out/patch/$f
 
 	if [ -f $f ];then
-		if [ -f $EQUIV ];then
-			oldmd5=`md5sum ../z2/$f | cut -d ' ' -f1`
-			newmd5=`md5sum $f | cut -d ' ' -f1`
-			if [ "$newmd5" == "$oldmd5" ]; then
-				echo "skipping: $f"
-			else
-				echo "delta: $f"
-				mkdirp ../out/patch/$(dirname $f) 2> /dev/null
-				$XDELTA3 -D -R -e -s $f $EQUIV $OUTFILE.delta
-				filepath=`dirname $f | cut -d'.' -f2`
-				echo "package_extract_file(\"patch`dirname $f | cut -d'.' -f2`/`basename $f`.delta\", \"/tmp/`basename $f`.delta\");" >> ../applypatch.txt
-				echo "run_program(\"/tmp/patcher\", \"`dirname $f | cut -d'.' -f2`/`basename $f`\", \"/tmp/`basename $f`.delta\", \"/system/tmp/`basename $f`\");" >> ../applypatch.txt
-			fi
-		fi
+		gen_diff $f &
 	fi
 done
+wait
 
 cd ..
 
@@ -239,21 +247,21 @@ IFS=$OLD_IFS
 echo "" >> updater-script
 # Verifying system
 echo "ui_print(\"Verifying product version...\");" >> updater-script
-echo "package_extract_file(\"verifier\", \"/tmp/verifier\");" >> updater-script
-echo "set_perm(0, 0, 0777, \"/tmp/verifier\");" >> updater-script
-echo "ifelse(run_program(\"/tmp/verifier\", \"$OLDVERSION\") == 0, ui_print(\"Versions match...\"), (unmount(\"/system\");abort(\"Versions mismatch...\")));" >> updater-script
+echo "ifelse(run_program(\"/system/bin/verifier\", \"$OLDVERSION\") == 0, ui_print(\"Versions match...\"), (unmount(\"/system\");abort(\"Versions mismatch...\")));" >> updater-script
 echo "show_progress(0.100000,0);" >> updater-script
-echo "" >> updater-script
-# Extracting tools
-echo "ui_print(\"Unpacking tools...\");" >> updater-script
-echo "show_progress(0.100000,0);" >> updater-script
-echo "package_extract_file(\"patcher\", \"/tmp/patcher\");" >> updater-script
-echo "set_perm(0, 0, 0777, \"/tmp/patcher\");" >> updater-script
-echo "run_program(\"/sbin/mkdir\", \"/system/tmp\");" >> updater-script
 echo "" >> updater-script
 # Apply patch
 echo "# ---- start making changes here ----" >> updater-script
 echo "" >> updater-script
+echo "ui_print(\"Checking system files...\");" >> updater-script
+echo "show_progress(0.100000,0);" >> updater-script
+cat checkpatch.txt >> updater-script
+echo "" >> updater-script
+echo "ui_print(\"Patching system files...\");" >> updater-script
+echo "show_progress(0.200000,0);" >> updater-script
+cat applypatch.txt >> updater-script
+echo "" >> updater-script
+# Delete old files
 echo "ui_print(\"Removing unneeded files...\");" >> updater-script
 echo "show_progress(0.100000,0);" >> updater-script
 if [ -f "deleted.txt" ];then
@@ -262,22 +270,18 @@ if [ -f "deleted.txt" ];then
 fi
 echo "delete_recursive(\"/system/etc/init.d\");" >> updater-script
 echo "" >> updater-script
-echo "ui_print(\"Patching system files...\");" >> updater-script
-echo "show_progress(0.200000,0);" >> updater-script
-cat applypatch.txt >> updater-script
-echo "" >> updater-script
 # New files
 echo "ui_print(\"Unpacking new files...\");" >> updater-script
-echo "show_progress(0.600000,0);" >> updater-script
+echo "show_progress(0.300000,0);" >> updater-script
 for dir in $(find z2 -maxdepth 1 -mindepth 1 -type d | awk -F'/' '{print $NF}'); do
     echo "package_extract_dir(\"$dir\", \"/$dir\");" >> updater-script
 done
 echo "" >> updater-script
 # Permissions
 if cat oldscript | grep set_perm | grep -v backuptool | grep -vq tmp;then
-    echo "ui_print(\"Setting permissions...\");" >> updater-script
+	echo "ui_print(\"Setting permissions...\");" >> updater-script
 else
-    echo "ui_print(\"Setting metadata...\");" >> updater-script
+	echo "ui_print(\"Setting metadata...\");" >> updater-script
 fi
 echo "show_progress(0.100000,0);" >> updater-script
 OLD_IFS=$IFS
@@ -286,9 +290,9 @@ for x in `cat oldscript | grep set_metadata`; do
 	echo $x >> updater-script
 done
 for x in `cat oldscript | grep set_perm`;do
-    if [[ ! `echo $x | grep "backuptool"` ]] && [[ ! `echo $x | grep "/tmp"` ]] ;then
-        echo $x >> updater-script
-    fi
+	if [[ ! `echo $x | grep "backuptool"` ]] && [[ ! `echo $x | grep "/tmp"` ]] ;then
+		echo $x >> updater-script
+	fi
 done
 IFS=$OLD_IFS
 echo "" >> updater-script
@@ -314,8 +318,6 @@ echo "" >> updater-script
 echo "ui_print(\"Cleaning up...\");" >> updater-script
 echo "show_progress(0.100000,0);" >> updater-script
 echo "delete(\"/tmp/verifier\");" >> updater-script
-echo "delete(\"/tmp/patcher\");" >> updater-script
-echo "delete_recursive(\"/system/tmp\");" >> updater-script
 for i in `cat oldscript | grep "unmount(" | sort`;do
 	if [ "$i" != "$j" ];then
 		j=$i
@@ -329,18 +331,14 @@ sed -i 's/z2/system/g' updater-script
 mv updater-script out/META-INF/com/google/android/updater-script
 
 cd $ANDROID_BUILD_TOP
-BINARY1=$(realpath vendor/pa/ota/patcher)
-BINARY2=$(realpath vendor/pa/ota/verifier)
 if [ $IS_MTD == 1 ];then
-	BINARY3=$(realpath vendor/pa/ota/mtd_updater.sh)
+	BINARY1=$(realpath vendor/mk/prebuilt/ota/mtd_updater.sh)
 fi
 cd $TMP/out
-cp $BINARY1 ./
-cp $BINARY2 ./
-if [ ! -z "$BINARY3" ];then
-    cp $BINARY3 ./
+if [ ! -z "$BINARY1" ];then
+	cp $BINARY1 ./
 fi
 zip -r ../ota.zip .
 java -Xmx1024m -jar $ANDROID_BUILD_TOP/build/tools/mk_ota_script/sign_mokee_ota.jar -w $SECURITYDIR/testkey.x509.pem $SECURITYDIR/testkey.pk8 ../ota.zip $OUT
-cd ../../
-rm -rf tmp
+cd $ANDROID_BUILD_TOP
+rm -rf $TMP

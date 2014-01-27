@@ -38,8 +38,8 @@ mkdir -p $OTA_INPUT
 # TARGET_PKG_PATH=`cat out/target/product/$DEVICE/romPath`
 TARGET_PKG_PATH=out/target/product/$DEVICE/pa_$DEVICE-4*.zip
 
-if [ -z "`which xdelta3 2> /dev/null`" ];then
-        echo "xdelta3 is not installed!"
+if [ -z "`which bsdiff 2> /dev/null`" ];then
+        echo "bsdiff is not installed!"
         echo "Please install it first!"
         exit 1
 elif [ -z "$OTA_INPUT" ];then
@@ -51,15 +51,14 @@ fi
 
 if [ -z "$OUT_DIR" ];then
 	OUTPUT=out/target/OTA/$DEVICE
-	LOGDIR=out/target/OTA/$DEVICE/logs
 else
 	OUTPUT=$OUT_DIR/target/OTA/$DEVICE
-	LOGDIR=$OUT_DIR/target/OTA/$DEVICE/logs
 fi
 
 cp $TARGET_PKG_PATH $INPUT 2> /dev/null
 
 echo ""
 echo "OTA: RemixPA"
-build/tools/mk_ota_script/ota $INPUT $OUTPUT $LOGDIR
+build/tools/mk_ota_script/ota $INPUT $OUTPUT
+rm -rf $OUTPUT/../tmp
 
