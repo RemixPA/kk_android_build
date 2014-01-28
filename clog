@@ -45,7 +45,7 @@ cd $line
     # Forgive my bad script :P
     project=${line#*/}
     if [ ! -z "$log" ]; then
-        if [ ! "$project" == ".repo/manifests" ] || [ ! "$project" == "changelog" ] ;then
+        if [ ! "$project" == ".repo/manifests" ] && [ ! "$project" == "changelog" ] ;then
         # Write the changelog
         echo " >>> Changelog is updated and written for $project ..."
         echo "Project: $project" >> "$logpath"
