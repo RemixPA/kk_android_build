@@ -40,11 +40,7 @@ if [ -f $EQUIV ];then
 		$BSDIFF $1 $EQUIV ${OUTFILE}.p
 		filename=`basename $1`
 		if ! echo $EXCLUDE_CHECK_MAIN | grep -q $filename;then
-			if ! echo $EXCLUDE_CHECK_DEVICE | grep -q $filename;then
-				if ! echo $EXCLUDE_CHECK_COMMON | grep -q $filename;then
-					echo "apply_patch_check(\"$file\", \"$newsha1\", \"$oldsha1\") || abort(\"$file has unexpected contents.\");" >> ../checkpatch.txt
-				fi
-			fi
+		    echo "apply_patch_check(\"$file\", \"$newsha1\", \"$oldsha1\") || abort(\"$file has unexpected contents.\");" >> ../checkpatch.txt
 		fi
 		echo "apply_patch(\"$file\", \"-\", $newsha1, $newsize, $oldsha1, package_extract_file(\"patch${file}.p\"));" >> ../applypatch.txt
 	fi
@@ -231,8 +227,8 @@ cd ..
 # Generating updater-script
 OLDVERSION=$(cat z1/system/build.prop | grep "ro\.modversion" | sed "s/ //g" | cut -d"=" -f2)
 NEWVERSION=$(cat z2/system/build.prop | grep "ro\.modversion" | sed "s/ //g" | cut -d"=" -f2)
-echo "ui_print(\"Updating from ${OLDVERSION}\");" >> updater-script
-echo "ui_print(\"to ${NEWVERSION} for your device.\");" >> updater-script
+echo "ui_print(\"Updating from pa-${OLDVERSION}\");" >> updater-script
+echo "ui_print(\"to pa-${NEWVERSION} for your device.\");" >> updater-script
 echo "ui_print(\"It may take several minutes, please be patient.\");" >> updater-script
 # Mount file system
 OLD_IFS=$IFS

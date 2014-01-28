@@ -57,6 +57,12 @@ fi
 
 cp $TARGET_PKG_PATH $INPUT 2> /dev/null
 
+if [ -f build/tools/mk_ota_script/exclude_check ];then
+    . build/tools/mk_ota_script/exclude_check
+else
+    unset $EXCLUDE_CHECK_MAIN
+fi
+
 echo ""
 echo "OTA: RemixPA"
 build/tools/mk_ota_script/ota $INPUT $OUTPUT
