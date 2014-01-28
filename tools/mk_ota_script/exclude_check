@@ -17,6 +17,8 @@
 #
 
 export EXCLUDE_CHECK_MAIN="QuickSearchBox.apk
+Calendar.apk
+CalendarProvider.apk
 LatinIME.apk
 OneTimeInitializer.apk
 Provision.apk

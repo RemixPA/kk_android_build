@@ -335,6 +335,6 @@ if [ ! -z "$BINARY1" ];then
 	cp $BINARY1 ./
 fi
 zip -r ../ota.zip .
-java -Xmx1024m -jar $ANDROID_BUILD_TOP/build/tools/mk_ota_script/sign_mokee_ota.jar -w $SECURITYDIR/testkey.x509.pem $SECURITYDIR/testkey.pk8 ../ota.zip $OUT
+java -Xmx1024m -jar $ANDROID_BUILD_TOP/build/tools/mk_ota_script/sign_ota.jar -w $SECURITYDIR/testkey.x509.pem $SECURITYDIR/testkey.pk8 ../ota.zip $OUT
 cd $ANDROID_BUILD_TOP
 rm -rf $TMP
