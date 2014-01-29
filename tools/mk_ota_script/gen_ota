@@ -26,6 +26,7 @@ if [ ! -e "mk" ];then
 fi
 
 DEVICE=$1
+BASEDIR=`pwd`
 
 if [ -z "$OUT_DIR" ];then
 	OTA_INPUT=out/target/OTA_INPUT/$DEVICE
@@ -34,9 +35,6 @@ else
 fi
 
 mkdir -p $OTA_INPUT
-
-# TARGET_PKG_PATH=`cat out/target/product/$DEVICE/romPath`
-TARGET_PKG_PATH=out/target/product/$DEVICE/pa_$DEVICE-4*.zip
 
 if [ -z "`which bsdiff 2> /dev/null`" ];then
         echo "bsdiff is not installed!"
@@ -55,7 +53,11 @@ else
 	OUTPUT=$OUT_DIR/target/OTA/$DEVICE
 fi
 
-cp $TARGET_PKG_PATH $INPUT 2> /dev/null
+cd $BASEDIR/out/target/product/$DEVICE
+for file in $(find pa_$DEVICE-4*.zip -type f -print); do
+    cp $file $BASEDIR/$INPUT/$file 2> /dev/null
+done
+cd $BASEDIR
 
 if [ -f build/tools/mk_ota_script/exclude_check ];then
     . build/tools/mk_ota_script/exclude_check
