@@ -68,6 +68,8 @@ echo "You can see more changelog from http://github.com/RemixPA" >> "$logpath"
 echo ""
 echo "---------------------------------------------------------------"
 echo ""
+cat $logpath
+echo ""
 echo "Ready to upload?[y]/[n]"
 read answer
 if [ "$answer" == "y" ];then
