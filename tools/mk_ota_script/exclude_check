@@ -24,4 +24,5 @@ OneTimeInitializer.apk
 Provision.apk
 libjni_unbundled_latinimegoogle.so
 libmsc-v7.so
-su"
+su
+file_contexts"
