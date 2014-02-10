@@ -37,8 +37,7 @@ fi
 mkdir -p $OTA_INPUT
 
 if [ -z "`which bsdiff 2> /dev/null`" ];then
-        echo "bsdiff is not installed!"
-        echo "Please install it first!"
+        echo "Please do lunch first!"
         exit 1
 elif [ -z "$OTA_INPUT" ];then
 	echo "OTA_INPUT not defined!"

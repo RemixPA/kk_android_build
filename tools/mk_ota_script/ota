@@ -81,8 +81,7 @@ for i in $FILENAMES;do
 	if [ "$i" != "$LATEST_ZIP" ] && [ ! -d $INPUT_PATH/$i ] && [[ "$i" == *".zip" ]];then
 		echo "Generating OTA package for $i..."
 		echo "------------------------------------"
-		echo "Generating OTA package for $i..."
-		build/tools/mk_ota_script/otabsdiff $INPUT_PATH/$i $INPUT_PATH/$LATEST_ZIP $OUTPUT_PATH/OTA-$LATEST_DEVICE-$LATEST_VERSION-$CUR_TIMESTAMP-$LATEST_TIMESTAMP.zip
+		build/tools/mk_ota_script/otabsdiff $INPUT_PATH/$i $INPUT_PATH/$LATEST_ZIP $OUTPUT_PATH/OTA-$LATEST_DEVICE-$LATEST_VERSION-$CUR_TIMESTAMP-$LATEST_TIMESTAMP.zip > /dev/null
 		echo "Completed OTA package for $i at `date`"
 		MD5=`md5sum $OUTPUT_PATH/OTA-$LATEST_DEVICE-$LATEST_VERSION-$CUR_TIMESTAMP-$LATEST_TIMESTAMP.zip | cut -f1 -d' '`
 		echo "MD5sum : $MD5"
