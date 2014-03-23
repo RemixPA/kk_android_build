@@ -1,6 +1,5 @@
 #!/bin/bash
 
-sdate=${1}
 tdate=`date +"%m/%d/%Y"`
 cdate=`date +"%y%m%d"`
 rdir=`pwd`
@@ -13,8 +12,10 @@ logpath="$logdir"/"$logfile"
 
 rm -f "$logpath"
 
-# Check the date start range is set
-if [ -z "$sdate" ]; then
+# Read sdate from file..
+if [ -f "$logdir/last_log_date" ]; then
+    sdate=`cat $logdir/last_log_date`
+else
     echo ""
     echo "----------------------- ATTENTION: Start date not defined -----------------------"
     echo ""
@@ -27,6 +28,7 @@ if [ -z "$sdate" ]; then
         exit
     fi
     sdate=$idate
+    echo $sdate > "$logdir/last_log_date"
 fi
 
 # Find the directories to log
