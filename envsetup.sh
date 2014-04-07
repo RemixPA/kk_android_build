@@ -1403,6 +1403,44 @@ function getlog() {
     ./build/clog $1
 }
 
+# RemixPA get device
+function getdevice() {
+    if [ -n "$1" ]; then
+        device=`cat vendor/pa/vendorsetup.sh | grep $1 | cut -d " " -f2 | cut -d "-" -f1 | cut -b 4-`
+        echo "Reading info from github.com/RemixPA ... Please wait"
+        # Default lge
+        manufacturer=lge
+        testurl=`curl https://raw.githubusercontent.com/RemixPA/android_device_lge_${device}/kk4.4/pa.dependencies` > /dev/zero
+        # Trying samsung
+        if [ "$testurl" == "Not Found" ]; then
+            manufacturer=samsung
+            testurl=`curl https://raw.githubusercontent.com/RemixPA/android_device_samsung_${device}/kk4.4/pa.dependencies` > /dev/zero
+        fi
+        # Trying asus
+        if [ "$testurl" == "Not Found" ]; then
+            manufacturer=asus
+            testurl=`curl https://raw.githubusercontent.com/RemixPA/android_device_asus_${device}/kk4.4/pa.dependencies` > /dev/zero
+        fi
+        # No result
+        if [ "$testurl" == "Not Found" ]; then
+            echo "manufacturer not found"
+            manufacturer=""
+        fi
+        
+        if [ -n "$device" ] && [ -n "$manufacturer" ]; then
+            echo "writing $1 repository into manifest..."
+            content1="<project name=\"RemixPA/android_device_${manufacturer}_${device}\" path=\"device/${manufacturer}/${device}\" remote=\"github\" revision=\"kk4.4\" />"
+            content2="path=\"device\/${manufacturer}\/${device}\""
+            cp .repo/local_manifests/roomservice.xml .repo/local_manifests/roomservice.bak
+            printf "`cat .repo/local_manifests/roomservice.xml | sed -e "/<\/manifest>/i\  ${content1}" -e "/${content2}/d"`" > .repo/local_manifests/roomservice.xml
+        else
+            echo "$1 is not supported by RemixPA"
+        fi
+    else
+        echo "no device input"
+    fi
+}
+
 # OTA Script
 function ota() {
     ./build/tools/mk_ota_script/gen_ota $1
