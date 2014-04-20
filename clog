@@ -12,8 +12,10 @@ logpath="$logdir"/"$logfile"
 
 rm -f "$logpath"
 
-# Read sdate from file..
-if [ -f "$logdir/last_log_date" ]; then
+# Read sdate from file
+if [ -n "$1" ]; then
+    sdate=$1
+elif [ -f "$logdir/last_log_date" ]; then
     sdate=`cat $logdir/last_log_date`
 else
     echo ""
@@ -31,9 +33,8 @@ else
     echo $sdate > "$logdir/last_log_date"
 fi
 
-# Find the directories to log
-echo "RemixPA Changelog Generating -------------------"
-echo ""
+echo "RemixPA Changelog for $sdate" - "$tdate"
+echo "---------------------------------------------------------------"
 cd $rdir
 # Log starter
 echo "RemixPA Changelog from $sdate" - "$tdate" >> "$logpath"
@@ -66,7 +67,7 @@ if [ "$count" == "3" ]; then
     echo "" >> "$logpath"
 fi
 echo "---------------------------------------------------------------" >> "$logpath"
-echo "You can see more changelog from http://github.com/RemixPA" >> "$logpath"
+echo "You can see more changelog from http://github.com/RemixPA/Changelog" >> "$logpath"
 echo ""
 echo "---------------------------------------------------------------"
 echo ""
