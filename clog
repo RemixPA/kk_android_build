@@ -30,8 +30,8 @@ else
         exit
     fi
     sdate=$idate
-    echo $sdate > "$logdir/last_log_date"
 fi
+echo $sdate > "$logdir/last_log_date"
 
 echo "RemixPA Changelog for $sdate" - "$tdate"
 echo "---------------------------------------------------------------"
