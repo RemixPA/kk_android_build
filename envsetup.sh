@@ -1537,4 +1537,6 @@ do
 done
 unset f
 
+export ENV_HAS_SETUP=1
+
 addcompletions
